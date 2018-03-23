@@ -1,0 +1,63 @@
+<h1>Enter a word</h1>
+<input type="text" id="word-holder" class="text-input" placeholder="word">
+<input type="button" id="display-word" class="btn" value="Display">
+<div id="word-difinition" class="text-lable">
+</div>
+<div id="word-complition" class="text-lable text-small">
+</div>
+<script type="text/javascript">
+(function(){
+    let wordValue = "";
+    document.getElementById("display-word").onclick = function(){
+        let xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function(){
+            if(xmlHttp.readyState == XMLHttpRequest.DONE){
+                if(xmlHttp.status == 200){
+                    let response = JSON.parse(this.response);
+                    if(response['word'] != ""){
+                        document.getElementById('word-difinition').textContent = wordValue.toUpperCase() + ":" + response['word'];
+                    }else{
+                        document.getElementById('word-difinition').textContent = `Word ${wordValue} not found in the dictionary`;
+                    }
+                    document.getElementById('word-complition').classList.remove('active');
+                    document.getElementById('word-difinition').classList.add('active');
+                }
+            }
+        };
+
+        xmlHttp.open('GET', `dictionary?word=${wordValue}`);
+        xmlHttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xmlHttp.send();
+    }
+    document.getElementById('word-holder').onkeyup = function(){
+        document.getElementById('word-complition').classList.add('active');
+        document.getElementById('word-difinition').classList.remove('active');
+        wordValue = this.value;
+        let xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function(){
+            if(xmlHttp.readyState == XMLHttpRequest.DONE){
+                if(xmlHttp.status == 200){
+                    let response = JSON.parse(this.response);
+                    if(response['words'] != {}){
+                        let complitions = response['words'].split(':');
+                        document.getElementById('word-complition').textContent = "";
+                        for(var i in complitions){
+                            let container = document.createElement('div');
+                            container.classList="complition";
+                            container.textContent = complitions[i];
+                            container.onclick = function(){
+                                wordValue = this.textContent;
+                                document.getElementById('word-holder').value = wordValue;
+                            }
+                            document.getElementById('word-complition').appendChild(container);
+                        }
+                    }
+                }
+            }
+        };
+        xmlHttp.open('GET', `suggestions?word=${wordValue}`);
+        xmlHttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xmlHttp.send();
+    };
+})();
+</script>
